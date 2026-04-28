@@ -29,6 +29,22 @@ VENDOR_MAP = {
 	2: "Vendor 2",
 }
 
+BASE_COLUMNS = [
+	"VendorID",
+	"tpep_pickup_datetime",
+	"tpep_dropoff_datetime",
+	"passenger_count",
+	"trip_distance",
+	"pickup_longitude",
+	"pickup_latitude",
+	"dropoff_longitude",
+	"dropoff_latitude",
+	"payment_type",
+	"fare_amount",
+	"total_amount",
+	"tip_amount",
+]
+
 
 def clean_and_enrich(df: pd.DataFrame) -> pd.DataFrame:
 	df = df.copy()
@@ -86,18 +102,13 @@ def clean_and_enrich(df: pd.DataFrame) -> pd.DataFrame:
 @st.cache_data(show_spinner=False)
 def load_data() -> pd.DataFrame:
 	if PARQUET_PATH.exists():
-		df = pd.read_parquet(PARQUET_PATH)
-		required_columns = {
-			"pickup_hour",
-			"pickup_dayofweek",
-			"tip_pct",
-			"vendor_label",
-			"payment_label",
-		}
-		if required_columns.issubset(df.columns):
-			return df
+		try:
+			df = pd.read_parquet(PARQUET_PATH, columns=BASE_COLUMNS)
+		except Exception:
+			df = pd.read_csv(CSV_PATH, usecols=BASE_COLUMNS)
+	else:
+		df = pd.read_csv(CSV_PATH, usecols=BASE_COLUMNS)
 
-	df = pd.read_csv(CSV_PATH)
 	df = clean_and_enrich(df)
 
 	PARQUET_PATH.parent.mkdir(parents=True, exist_ok=True)
