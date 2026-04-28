@@ -11,3 +11,4 @@ wheels/
 
 # csv files
 *.csv
+*.parquet
